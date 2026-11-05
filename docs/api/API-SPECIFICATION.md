@@ -1,7 +1,7 @@
 # API Specification
 
 **Base path:** `/api/v1`  
-**Status:** Proposed contract. No routes are implemented.  
+**Status:** Proposed contract. Only login, refresh, logout, signup, and me under `/api/v1/auth` are implemented.  
 **Format:** JSON, UTF-8.  
 **Time:** ISO-8601 UTC.  
 **Ids:** UUID strings.
@@ -39,6 +39,8 @@ Every error uses HTTP status plus:
 
 Unknown ids return 404, including when the caller must not learn that a record exists outside their scope.
 
+**Exception:** errors that Kong creates itself do not use this body. These are a missing or forged token (401), an unknown route (404), a body over 1 MB (413), and a service that is down (502 or 503). They return `{ "message": "..." }`.
+
 ## Pagination
 
 List endpoints accept `limit` (default 20, max 100) and `cursor` (opaque). Response:
@@ -74,10 +76,20 @@ List endpoints accept `limit` (default 20, max 100) and `cursor` (opaque). Respo
 - **Response 204**
 - **Errors:** 401 if the access token is missing
 
+### POST /api/v1/auth/signup
+
+Creates a new company and its first admin ([ADR-010](../adr/ADR-010-multi-tenancy.md)). It cannot join an existing company.
+
+- **Auth:** none
+- **Request:** `{ "company_name", "industry"?, "full_name", "email", "password" }`
+- **Validation:** company name 2–120 chars, email format, password 10–128 chars
+- **Response 201:** same as login, plus `organization_id`
+- **Errors:** 400 `VALIDATION_ERROR`, 409 `CONFLICT` if the email exists
+
 ### GET /api/v1/auth/me
 
 - **Auth:** bearer
-- **Response 200:** `{ "id", "email", "full_name", "role", "permissions": ["customer.read"] }`
+- **Response 200:** `{ "id", "email", "full_name", "role", "permissions": ["customer.read"], "memberships": [{ "organization", "role" }] }`
 
 ---
 

@@ -2,14 +2,18 @@ services:
   kong:
     image: kong:3.9.1
     restart: unless-stopped
+    command: ["sh", "/kong/start.sh"]
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /tmp/kong.yml
       KONG_PROXY_LISTEN: 0.0.0.0:8000
       # Routes live in gateway/kong.yml, so the Admin API stays off.
       KONG_ADMIN_LISTEN: "off"
     volumes:
       - ./gateway/kong.yml:/kong/kong.yml:ro
+      - ./gateway/start.sh:/kong/start.sh:ro
+    secrets:
+      - jwt_public_key
     ports:
       - "127.0.0.1:8080:8000"
     healthcheck:
@@ -20,10 +24,59 @@ services:
 
   # No published port: clients can only reach this service through Kong.
   auth-service:
-    build: ./services/auth
+    build: ./services/auth-service
     restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://crmai:${POSTGRES_PASSWORD:?Run scripts/setup-dev.sh first}@postgres:5432/crmai
+      JWT_PRIVATE_KEY_PATH: /run/secrets/jwt_private_key
+      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public_key
+    # Only this service gets the private key, so only this service can create tokens.
+    secrets:
+      - jwt_private_key
+      - jwt_public_key
+    depends_on:
+      postgres:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/auth/health')"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 15s
+
+  # No published port: only the services use the database.
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: crmai
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run scripts/setup-dev.sh first}
+      POSTGRES_DB: crmai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U crmai -d crmai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Runs only with: docker compose run --rm --build auth-service-test
+  auth-service-test:
+    profiles: [test]
+    build:
+      context: ./services/auth-service
+      target: test
+    environment:
+      DATABASE_URL: postgresql+psycopg://crmai:${POSTGRES_PASSWORD:?Run scripts/setup-dev.sh first}@postgres:5432/crmai_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+
+secrets:
+  jwt_private_key:
+    file: ./secrets/jwt_private.pem
+  jwt_public_key:
+    file: ./secrets/jwt_public.pem
