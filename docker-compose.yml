@@ -60,6 +60,28 @@ services:
       timeout: 5s
       retries: 10
 
+  # No published port: clients can only reach this service through Kong.
+  business-service:
+    build: ./services/business-service
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://crmai:${POSTGRES_PASSWORD:?Run scripts/setup-dev.sh first}@postgres:5432/crmai
+      JWT_PUBLIC_KEY_PATH: /run/secrets/jwt_public_key
+      AUTH_SERVICE_URL: http://auth-service:8000
+    # Only the public key: this service checks tokens and cannot create them.
+    secrets:
+      - jwt_public_key
+    depends_on:
+      # auth-service runs the migrations for the shared database.
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   # Runs only with: docker compose run --rm --build auth-service-test
   auth-service-test:
     profiles: [test]
@@ -68,6 +90,21 @@ services:
       target: test
     environment:
       DATABASE_URL: postgresql+psycopg://crmai:${POSTGRES_PASSWORD:?Run scripts/setup-dev.sh first}@postgres:5432/crmai_test
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # Runs only with: docker compose run --rm --build business-service-test
+  business-service-test:
+    profiles: [test]
+    build:
+      context: ./services/business-service
+      target: test
+    environment:
+      DATABASE_URL: postgresql+psycopg://crmai:${POSTGRES_PASSWORD:?Run scripts/setup-dev.sh first}@postgres:5432/crmai_business_test
+    volumes:
+      # The tests build their database with auth-service's real migrations.
+      - ./services/auth-service:/auth-service:ro
     depends_on:
       postgres:
         condition: service_healthy

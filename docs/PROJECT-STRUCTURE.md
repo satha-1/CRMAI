@@ -2,7 +2,7 @@
 
 **Current repository:** empty apart from `docs/` created by this design. There is no application tree to preserve.  
 **Rule:** add code in the layout below when implementation starts.  
-**Change in progress:** [ADR-011](adr/ADR-011-microservices-kong-gateway.md) proposes microservices behind Kong, in `gateway/` and `services/`. `backend/` below shows the earlier monolith layout. Until ADR-011 settles the service boundaries, add only the `auth` service to `services/`.
+**Change in progress:** [ADR-011](adr/ADR-011-microservices-kong-gateway.md) proposes microservices behind Kong, in `gateway/` and `services/`. `backend/` below shows the earlier monolith layout. `auth-service` and `business-service` exist so far. See ADR-011 before adding another.
 
 ```text
 CRMAI/
@@ -32,7 +32,8 @@ CRMAI/
 │   ├── kong.yml              # routes and JWT plugin config
 │   └── start.sh              # inserts the public key when Kong starts
 ├── services/
-│   └── auth-service/         # the only service that creates tokens
+│   ├── business-service/     # company data: staff, roles, and workspace settings
+│   └── auth-service/         # accounts, login, and tokens. The only service that touches passwords
 │       ├── app/
 │       │   ├── main.py
 │       │   ├── core/         # config, security, errors, rate limit
