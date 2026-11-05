@@ -29,9 +29,24 @@ CRMAI/
 │   ├── requirements.txt
 │   └── Dockerfile
 ├── gateway/
-│   └── kong.yml              # API gateway routes
+│   ├── kong.yml              # routes and JWT plugin config
+│   └── start.sh              # inserts the public key when Kong starts
 ├── services/
-│   └── auth/                 # first microservice
+│   └── auth-service/         # the only service that creates tokens
+│       ├── app/
+│       │   ├── main.py
+│       │   ├── core/         # config, security, errors, rate limit
+│       │   ├── api/          # deps and v1 endpoints
+│       │   ├── models/       # SQLAlchemy tables
+│       │   ├── schemas/      # Pydantic request and response models
+│       │   ├── repositories/ # DB queries only
+│       │   ├── services/     # business logic
+│       │   └── db/           # session and Alembic migrations
+│       ├── tests/
+│       ├── Dockerfile
+│       └── pyproject.toml
+├── scripts/
+│   └── setup-dev.sh          # creates local keys and .env
 ├── frontend/
 │   └── src/                  # staff app and widget entry
 ├── mobile/                   # Expo staff app
