@@ -47,3 +47,17 @@ services:
               # clients to refresh. Kong's own expiry response does not have that code.
               # So every service behind this plugin must check expiry.
               claims_to_verify: []
+
+  - name: business-service
+    url: http://business-service:8000
+    routes:
+      - name: business-routes
+        paths:
+          - ~/api/v1/users(/|$)
+          - ~/api/v1/organizations(/|$)
+        strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              uri_param_names: []
+              claims_to_verify: []

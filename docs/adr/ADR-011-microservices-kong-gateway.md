@@ -16,7 +16,9 @@ Reason for the change: _team to fill in before accepting this ADR. ADR-001 rejec
 - Kong routes by path and keeps the full path, so the public `/api/v1/...` contract in the API specification does not change.
 - Each service lives in `services/<name>/` and runs under Docker Compose. Services use FastAPI and Python, as ADR-003 expects for the backend.
 - Kong adds `X-Request-ID` to every request, which provides the `request_id` that the observability design requires.
-- `auth-service` is the first service. It owns `/api/v1/auth/*`.
+- `auth-service` owns accounts, passwords, tokens, and `/api/v1/auth/*`. No other service touches passwords.
+- `business-service` owns company data, and so far serves `/api/v1/users` and `/api/v1/organizations`. To create a login account it calls `POST /internal/accounts` on `auth-service`, a route Kong does not expose.
+- Both services use the shared `crmai` database for now, and `auth-service` runs all its migrations.
 - Access tokens use RS256, not the HS256 in the earlier security design. Only `auth-service` has the private key, so a service that only verifies tokens cannot create them.
 - Kong's JWT plugin rejects missing and forged tokens. Each service verifies the token again and checks expiry, because only the service can return the `AUTH_EXPIRED` error that tells clients to refresh.
 - `auth-service` loads permissions from the database on each request.
@@ -25,7 +27,7 @@ Reason for the change: _team to fill in before accepting this ADR. ADR-001 rejec
 
 These must be answered before a second service is built.
 
-1. **Service boundaries.** Only `auth` is decided. ADR-001 considered CRM, AI, and channels as possible services.
+1. **Service boundaries.** Only `auth-service` and `business-service` are decided. ADR-001 considered CRM, AI, and channels as possible services.
 2. **Database ownership.** One shared PostgreSQL database, or one per service. ADR-010 assumes one shared database and schema. `auth-service` currently uses the `crmai` database, and this can change while it is the only service.
 3. **Transactions.** ADR-001 kept customer, lead, and message writes in one transaction with the audit row. Decide how this holds if those tables end up in different services.
 4. **Agent tool calls.** The AI agent calls CRM services in-process through the tool executor, and channel adapters call the router in-process. Decide how these calls work over the network, and what happens when one fails during an agent turn.

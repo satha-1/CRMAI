@@ -1,7 +1,7 @@
 # API Specification
 
 **Base path:** `/api/v1`  
-**Status:** Proposed contract. Only login, refresh, logout, signup, and me under `/api/v1/auth` are implemented.  
+**Status:** Proposed contract. Implemented so far: `/auth/*` in `auth-service`, and `/users` and `/organizations` in `business-service`.  
 **Format:** JSON, UTF-8.  
 **Time:** ISO-8601 UTC.  
 **Ids:** UUID strings.
@@ -489,25 +489,59 @@ There is no public "create notification" API. Services create them.
 
 ---
 
-## Users (admin)
+## Users (staff)
+
+Served by `business-service`. These routes work on the company named by `X-Organization-Id`. A missing header, or a company the caller does not belong to, returns 403.
 
 ### GET /api/v1/users
 
-- **Authz:** `user.manage`
+- **Authz:** any active member, because pages for assigning work need the list of people
+- **Response 200:** `{ "items": [{ "id", "email", "full_name", "role", "is_active", "created_at", "manager_id" }], "next_cursor": null }`, for this company only
 
 ### POST /api/v1/users
 
 - **Authz:** `user.manage`
-- **Request:** `{ "email", "full_name", "password", "role" }`
-- **Validation:** password at least 10 characters, role is `admin`, `supervisor`, or `agent`
-- **Response 201:** user without password hash
+- **Request:** `{ "email", "full_name", "password"?, "role", "manager_id"? }`
+- **Validation:** `role` is `marketing_manager`, `marketing_executive`, `sales_manager`, or `sales_executive`. A new account needs a password of at least 10 characters. Only an executive can have a manager, and it must be an active manager of their team in this company
+- **Existing email:** the person joins this company and keeps their own password and name
+- **Response 201:** the staff member, without any password
+- **Errors:** 400 `VALIDATION_ERROR`, 403 `FORBIDDEN`, 409 `CONFLICT` if they are already in this company, 502 `UPSTREAM_FAILED` if `auth-service` cannot be reached
 
 ### PATCH /api/v1/users/{id}
 
 - **Authz:** `user.manage`
-- **Request:** `{ "is_active"?, "role"?, "full_name"?, "password"? }`
-- **Validation:** if `password` is present it is at least 10 characters, it is stored only as a bcrypt hash, and all refresh families for that user are revoked
-- **Response 200:** user without password hash
+- **Request:** `{ "role"?, "manager_id"?, "is_active"? }`
+- **Rules:** these apply to this company only. A role change clears the person's manager and anyone reporting to them. Admins cannot demote or deactivate themselves, and an admin's role cannot be changed here
+- **Not accepted:** name and password, because they belong to the person's account across all their companies
+- **Response 200:** the staff member
+- **Errors:** 400 `VALIDATION_ERROR`, 403 `FORBIDDEN`, 404 `NOT_FOUND` for anyone outside this company
+
+## Organizations
+
+Served by `business-service`.
+
+### POST /api/v1/organizations
+
+- **Auth:** bearer. Creates a new, empty company and makes the caller its admin
+- **Request:** `{ "name", "industry"? }`
+- **Response 201:** the organization
+
+### GET /api/v1/organizations/current
+
+- **Authz:** any active member
+- **Response 200:** `{ "id", "name", "industry", "plan", "widget_key", "timezone", "product_label", "created_at", "channels": [{ "code", "is_enabled" }] }`
+
+### PATCH /api/v1/organizations/current
+
+- **Authz:** `org.manage`
+- **Request:** any of `{ "name", "industry", "timezone", "product_label", "channels" }`
+- **Validation:** only `website` and `email` can be turned on, because other channels have no real transport yet
+- **Response 200:** the organization
+
+### POST /api/v1/organizations/current/rotate-widget-key
+
+- **Authz:** `org.manage`
+- **Response 200:** the organization with a new `widget_key`. Sites using the old key stop working
 
 ---
 
