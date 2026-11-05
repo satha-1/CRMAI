@@ -1,0 +1,22 @@
+{$SITE_ADDRESS} {
+	encode gzip
+
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+	}
+	# The chat widget is meant to be embedded on other sites, so only the staff app denies framing.
+	@staff not path /widget*
+	header @staff X-Frame-Options DENY
+
+	handle /api/* {
+		reverse_proxy kong:8000
+	}
+
+	handle {
+		root * /srv
+		# Page routes such as /login only exist in the browser, so serve the app for them.
+		try_files {path} /index.html
+		file_server
+	}
+}
