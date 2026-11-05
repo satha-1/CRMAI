@@ -1,7 +1,8 @@
 # Project Structure
 
 **Current repository:** empty apart from `docs/` created by this design. There is no application tree to preserve.  
-**Rule:** add code in the layout below when implementation starts. Do not invent a second backend beside `backend/`.
+**Rule:** add code in the layout below when implementation starts.  
+**Change in progress:** [ADR-011](adr/ADR-011-microservices-kong-gateway.md) proposes microservices behind Kong, in `gateway/` and `services/`. `backend/` below shows the earlier monolith layout. Until ADR-011 settles the service boundaries, add only the `auth` service to `services/`.
 
 ```text
 CRMAI/
@@ -27,6 +28,10 @@ CRMAI/
 │   │   └── gold/             # intent and RAG jsonl files
 │   ├── requirements.txt
 │   └── Dockerfile
+├── gateway/
+│   └── kong.yml              # API gateway routes
+├── services/
+│   └── auth/                 # first microservice
 ├── frontend/
 │   └── src/                  # staff app and widget entry
 ├── mobile/                   # Expo staff app
@@ -44,7 +49,6 @@ CRMAI/
 
 ## What not to add yet
 
-- A `services/` repo of microservices
 - A separate `vector-db` container
 - Generated client SDKs
 - A monorepo tool. Three folders and a compose file are enough
