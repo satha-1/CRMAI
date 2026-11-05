@@ -36,7 +36,7 @@ implementation of `docs/api/API-SPECIFICATION.md`, saved in `localStorage` so th
 staff tab share data. `src/api/mock/agent.ts` is a **scripted stand-in** for the AI orchestrator
 (keyword rules for scenarios 1–5, 8, 9) so the demo works without an LLM. It is not the real agent.
 
-When the FastAPI backend is up, set `VITE_USE_MOCK=false`. Vite proxies `/api` to `http://localhost:8000`.
+When the FastAPI backend is up, set `VITE_USE_MOCK=false`. Vite proxies `/api` to the Kong gateway on `http://localhost:8080`.
 No page code changes: pages only call hooks in `src/api/queries.ts`.
 
 To reset demo data: in the browser console, run `localStorage.removeItem('crmai.mockdb')` and reload.

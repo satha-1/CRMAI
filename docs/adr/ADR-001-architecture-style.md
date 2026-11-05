@@ -1,5 +1,7 @@
 # ADR-001 Architecture Style
 
+**Status:** To be superseded by [ADR-011](ADR-011-microservices-kong-gateway.md), which is proposed and not yet accepted.
+
 ## Context
 
 The system must connect a CRM, several channels, and an AI agent that calls CRM actions. The team has four people. The repository had no existing services to split. The academic deliverable is a working prototype, not a platform.

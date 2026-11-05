@@ -1,0 +1,29 @@
+services:
+  kong:
+    image: kong:3.9.1
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_LISTEN: 0.0.0.0:8000
+      # Routes live in gateway/kong.yml, so the Admin API stays off.
+      KONG_ADMIN_LISTEN: "off"
+    volumes:
+      - ./gateway/kong.yml:/kong/kong.yml:ro
+    ports:
+      - "127.0.0.1:8080:8000"
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # No published port: clients can only reach this service through Kong.
+  auth-service:
+    build: ./services/auth
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/auth/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
