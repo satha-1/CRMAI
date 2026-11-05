@@ -1,0 +1,35 @@
+# Production additions. See docs/deployment/LIGHTSAIL.md.
+# Run with: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build --wait
+services:
+  kong:
+    # Only Caddy reaches Kong in production.
+    ports: !reset []
+    environment:
+      # Kong's default of one worker per CPU with a large cache uses too much memory on a small server.
+      KONG_NGINX_WORKER_PROCESSES: "1"
+      KONG_MEM_CACHE_SIZE: 64m
+      # Safe because Kong has no published port, so this header can only come from Caddy.
+      KONG_TRUSTED_IPS: 0.0.0.0/0,::/0
+      KONG_REAL_IP_HEADER: X-Forwarded-For
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_USE_MOCK: ${VITE_USE_MOCK:-false}
+    restart: unless-stopped
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?Set SITE_ADDRESS in .env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Keeps the HTTPS certificate across restarts.
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - kong
+
+volumes:
+  caddy-data:
+  caddy-config:

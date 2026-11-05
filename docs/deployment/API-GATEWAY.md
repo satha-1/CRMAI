@@ -151,6 +151,8 @@ The example below adds a `crm` service for `/api/v1/customers`. First read the o
 
 ## Not set up yet
 
-CORS, security headers, TLS, gateway rate limiting, and JSON request logs are not configured. Kong only accepts connections from this machine (`127.0.0.1`), so change that binding only when you add TLS for a hosted environment.
+CORS and JSON request logs are not configured. In local development, Kong only accepts connections from this machine (`127.0.0.1`). For hosting, HTTPS and security headers come from Caddy: see [LIGHTSAIL.md](LIGHTSAIL.md).
+
+Kong limits the public auth routes to 30 requests per minute per IP address, and returns 429 with a top-level `message` above that.
 
 Login failures are limited to 10 per email per 15 minutes, in memory. The count resets when the service restarts, and it would not work with more than one replica.
