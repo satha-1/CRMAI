@@ -22,6 +22,7 @@ import { CallsPage } from '@/features/calls/CallsPage';
 import { VisitsPage } from '@/features/visits/VisitsPage';
 import { AssignPage } from '@/features/assign/AssignPage';
 import { VisitAssignPage } from '@/features/assign/VisitAssignPage';
+import { AssignCallsPage } from '@/features/assign/AssignCallsPage';
 import { PerformancePage } from '@/features/performance/PerformancePage';
 import { useAuth } from '@/auth/AuthProvider';
 import { EmptyState } from '@/components/ui';
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'assign', element: <AssignGate /> },
+      { path: 'assign-calls', element: gate('lead.assign.marketing', <AssignCallsPage />) },
       { path: 'performance', element: gate('team.performance', <PerformancePage />) },
       { path: 'calls', element: gate('call.log', <CallsPage />) },
       { path: 'visits', element: gate('visit.manage', <VisitsPage />) },

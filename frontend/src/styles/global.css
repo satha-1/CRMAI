@@ -419,3 +419,6 @@ input[type=checkbox] { accent-color: var(--primary); }
 
 /* grid children must be allowed to shrink so long one-line text ellipsizes instead of widening the page */
 .grid > * { min-width: 0; }
+
+.assign-call { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+.assign-call .field { min-width: 200px; }
