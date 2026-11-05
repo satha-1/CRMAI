@@ -16,9 +16,7 @@ const DEMO = [
 export function AuthArt() {
   return (
     <div className="auth-art">
-      <div className="brand" style={{ color: '#fff' }}>
-        <img src="/logo.svg" alt="" style={{ background: '#fff', borderRadius: 8, padding: 2 }} />CRMAI
-      </div>
+      <div className="brand brand-on-dark"><img src="/crmai-logo-on-dark.png" alt="CRM-AI" /></div>
       <div className="stack" style={{ gap: 26 }}>
         <h2>An AI agent that works your CRM — and knows when to hand over.</h2>
         <div className="feat"><Bot /><div><b>Understands every chat.</b><br />Creates leads and follow-ups from conversations through approved tools.</div></div>
