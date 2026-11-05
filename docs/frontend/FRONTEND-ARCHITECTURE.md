@@ -1,6 +1,6 @@
 # Frontend Architecture
 
-**Status:** Proposed. The repository has no web app.  
+**Status:** Implemented in `frontend/` against a mock API (see `frontend/README.md`). Pages live in `src/features/<area>/` instead of one `pages/` folder so four people can own separate folders. Multi-company workspaces: [ADR-010](../adr/ADR-010-multi-tenancy.md).  
 **Stack:** React 18, TypeScript, Vite, React Router, TanStack Query.  
 **UI kit:** implement with a small set of components. Do not adopt a design system that the team must fight. Plain CSS modules are enough.
 
