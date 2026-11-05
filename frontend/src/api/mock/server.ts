@@ -317,7 +317,7 @@ on('POST', '/leads', (ctx, _p, b) => {
   const l: Lead = { id: uid('lead'), organization_id: ctx.org.id, customer_id: b.customer_id, conversation_id: null, title: b.title, product_name: b.product_name || null,
     source_channel: b.source_channel || 'website', status: 'new', interest_summary: b.interest_summary, estimated_value: b.estimated_value ?? null,
     assigned_user_id: null, marketing_user_id: ctx.role === 'marketing_executive' ? ctx.user.id : null, sales_user_id: null, temperature: null,
-    call_count: 0, last_call_at: null, next_call_at: null, handed_over_at: null, created_actor_type: 'user', created_at: now, updated_at: now };
+    call_count: 0, last_call_at: null, next_call_at: null, call_instruction: null, handed_over_at: null, created_actor_type: 'user', created_at: now, updated_at: now };
   l.assigned_user_id = l.marketing_user_id;
   db.leads.push(l);
   journey(ctx.org.id, l.customer_id, 'lead_created', `Lead created: ${l.title}`, 'user', { actor_name: ctx.user.full_name, lead_id: l.id });
@@ -460,6 +460,26 @@ on('POST', '/leads/assign', (ctx, _p, b) => {
   return { assigned: ids.length };
 });
 
+/** Marketing manager schedules calls on existing leads: executive + time + instruction. */
+on('POST', '/leads/assign-calls', (ctx, _p, b) => {
+  need(ctx, 'lead.assign.marketing');
+  const ids: string[] = Array.isArray(b.lead_ids) ? b.lead_ids : [];
+  if (!ids.length) fail(400, 'VALIDATION_ERROR', 'Choose at least one lead');
+  if (memberRole(ctx.org.id, b.user_id) !== 'marketing_executive') fail(400, 'VALIDATION_ERROR', 'Pick a marketing executive');
+  if (!inMyTeam(ctx, b.user_id)) fail(400, 'VALIDATION_ERROR', `${userName(b.user_id)} reports to another manager`);
+  if (!b.call_at || new Date(b.call_at).getTime() < Date.now()) fail(400, 'VALIDATION_ERROR', 'Call time must be in the future');
+  for (const id of ids) {
+    const l = getLead(ctx, id);
+    if (!['new', 'contacted'].includes(l.status)) fail(409, 'CONFLICT', `${l.title} is already with sales`);
+    l.marketing_user_id = b.user_id;
+    l.next_call_at = new Date(b.call_at).toISOString();
+    l.call_instruction = String(b.instruction ?? '').trim() || null;
+    syncOwner(l);
+  }
+  notify(ctx.org.id, (_r, u) => u === b.user_id, { type: 'task_assigned', title: `${ids.length} call${ids.length > 1 ? 's' : ''} assigned to you`,
+    body: `${new Date(b.call_at).toLocaleString()}${b.instruction ? ` — ${String(b.instruction).trim()}` : ''}`, entity_type: 'lead', entity_id: ids[0] });
+  return { assigned: ids.length };
+});
 on('GET', '/leads/:id/calls', (ctx, [id]) => {
   need(ctx, 'lead.read'); getLead(ctx, id);
   return page(db.calls.filter((c) => c.lead_id === id).sort((a, b) => b.created_at.localeCompare(a.created_at)).map((c) => ({ ...c, user_name: userName(c.user_id) })));
@@ -485,6 +505,7 @@ on('POST', '/leads/:id/calls', (ctx, [id], b) => {
   l.call_count += 1;
   l.last_call_at = now;
   l.next_call_at = b.hand_over ? null : (b.next_call_at ?? null);
+  l.call_instruction = null;
   if (b.temperature) l.temperature = b.temperature;
   if (l.status === 'new') l.status = 'contacted';
   if (!l.marketing_user_id) l.marketing_user_id = ctx.user.id;

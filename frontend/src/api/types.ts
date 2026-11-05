@@ -140,6 +140,8 @@ export interface Lead {
   call_count: number;
   last_call_at: IsoDate | null;
   next_call_at: IsoDate | null;
+  /** Set by the marketing manager on "Assign calls"; cleared when the call is logged. */
+  call_instruction: string | null;
   handed_over_at: IsoDate | null;
   created_actor_type: ActorType;
   created_at: IsoDate;
