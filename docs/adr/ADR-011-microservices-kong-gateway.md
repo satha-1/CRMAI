@@ -5,7 +5,7 @@
 
 ## Context
 
-ADR-001 chose a modular monolith and rejected microservices. The project is now moving to microservices, with Kong as the single entry point for the API. `gateway/` and `services/auth/` already exist in the repository. The guide is [API-GATEWAY.md](../deployment/API-GATEWAY.md).
+ADR-001 chose a modular monolith and rejected microservices. The project is now moving to microservices, with Kong as the single entry point for the API. `gateway/` and `services/auth-service/` already exist in the repository. The guide is [API-GATEWAY.md](../deployment/API-GATEWAY.md).
 
 Reason for the change: _team to fill in before accepting this ADR. ADR-001 rejected this style because of network failures and the cost of running several deployables, so the reason should say what has changed._
 
@@ -16,17 +16,20 @@ Reason for the change: _team to fill in before accepting this ADR. ADR-001 rejec
 - Kong routes by path and keeps the full path, so the public `/api/v1/...` contract in the API specification does not change.
 - Each service lives in `services/<name>/` and runs under Docker Compose. Services use FastAPI and Python, as ADR-003 expects for the backend.
 - Kong adds `X-Request-ID` to every request, which provides the `request_id` that the observability design requires.
-- `auth` is the first service. It owns `/api/v1/auth/*`.
+- `auth-service` is the first service. It owns `/api/v1/auth/*`.
+- Access tokens use RS256, not the HS256 in the earlier security design. Only `auth-service` has the private key, so a service that only verifies tokens cannot create them.
+- Kong's JWT plugin rejects missing and forged tokens. Each service verifies the token again and checks expiry, because only the service can return the `AUTH_EXPIRED` error that tells clients to refresh.
+- `auth-service` loads permissions from the database on each request.
 
 ## Open questions
 
 These must be answered before a second service is built.
 
 1. **Service boundaries.** Only `auth` is decided. ADR-001 considered CRM, AI, and channels as possible services.
-2. **Database ownership.** One shared PostgreSQL database, or one per service. ADR-010 assumes one shared database and schema.
+2. **Database ownership.** One shared PostgreSQL database, or one per service. ADR-010 assumes one shared database and schema. `auth-service` currently uses the `crmai` database, and this can change while it is the only service.
 3. **Transactions.** ADR-001 kept customer, lead, and message writes in one transaction with the audit row. Decide how this holds if those tables end up in different services.
 4. **Agent tool calls.** The AI agent calls CRM services in-process through the tool executor, and channel adapters call the router in-process. Decide how these calls work over the network, and what happens when one fails during an agent turn.
-5. **Token checks.** ADR-007 loads RBAC permissions from the database on every request, and ADR-010 resolves the membership from `X-Organization-Id`. Decide where this happens: in Kong, or in each service.
+5. **Permission checks in other services.** ADR-007 loads RBAC permissions from the database on every request, and ADR-010 resolves the membership from `X-Organization-Id`. `auth-service` owns those tables, so decide how other services read them: a shared database, or a call to `auth-service`.
 6. **Background work.** Decide which service owns the follow-up scanner, which ADR-001 ran inside the API process.
 7. **Rate limits.** ADR-007 and the security design use in-memory limits for one process. Decide whether they stay in the services or move to Kong.
 

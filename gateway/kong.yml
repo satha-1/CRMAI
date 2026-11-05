@@ -1,20 +1,49 @@
 _format_version: "3.0"
 
-# Adds X-Request-ID to every request and response (see docs/architecture/OBSERVABILITY.md).
 plugins:
+  # Adds X-Request-ID to every request and response (see docs/architecture/OBSERVABILITY.md).
   - name: correlation-id
     config:
       header_name: X-Request-ID
       generator: uuid
       echo_downstream: true
+  # JSON body limit from docs/security/SECURITY-DESIGN.md.
+  - name: request-size-limiting
+    config:
+      allowed_payload_size: 1
+
+# The key that Kong uses to check tokens. It matches the token's "iss" claim.
+consumers:
+  - username: crmai-auth
+    jwt_secrets:
+      - key: crmai-auth
+        algorithm: RS256
+        # gateway/start.sh replaces this line with secrets/jwt_public.pem when Kong starts.
+        rsa_public_key: |
+          __JWT_PUBLIC_KEY__
 
 services:
   - name: auth-service
     url: http://auth-service:8000
     routes:
-      - name: auth-routes
+      # Routes that work without a token. Everything else under /api/v1/auth needs one.
+      - name: auth-public-routes
+        paths:
+          - ~/api/v1/auth/(login|refresh|signup|health)$
+        regex_priority: 1
+        strip_path: false
+      - name: auth-protected-routes
         # Regex, because a plain prefix would also match lookalikes such as /api/v1/authx.
         paths:
           - ~/api/v1/auth(/|$)
         # Keep the full path, because each service serves its routes under /api/v1/...
         strip_path: false
+        plugins:
+          - name: jwt
+            config:
+              # The token goes in the Authorization header only, never in the URL.
+              uri_param_names: []
+              # Expiry is left to the service, which returns the AUTH_EXPIRED error that tells
+              # clients to refresh. Kong's own expiry response does not have that code.
+              # So every service behind this plugin must check expiry.
+              claims_to_verify: []
