@@ -56,7 +56,10 @@ async function raw<T>(method: Method, path: string, body?: unknown): Promise<T> 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (accessToken) headers.Authorization = `Bearer ${accessToken}`;
   if (organizationId) headers['X-Organization-Id'] = organizationId;
-  const res = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+  const res = await fetch(BASE + path, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }).catch(() => {
+    // fetch only rejects when no response arrived, and its "Failed to fetch" message tells people nothing.
+    throw new ApiError(0, 'NETWORK', 'Cannot reach the server. Check your connection and try again.');
+  });
   if (res.status === 204) return undefined as T;
   const json = await res.json().catch(() => null);
   if (!res.ok) {
