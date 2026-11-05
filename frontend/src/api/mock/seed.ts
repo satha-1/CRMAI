@@ -39,7 +39,7 @@ export function buildSeed(): DB {
   const NL = 'org_northline';
   const NS = 'org_northstar';
   const db: DB = {
-    version: 6,
+    version: 5,
     orgs: [
       {
         id: NL, name: 'Northline Services', industry: 'Subscription services', plan: 'growth',
@@ -120,7 +120,7 @@ export function buildSeed(): DB {
     const l: Lead = { id: uid('lead'), organization_id: org, customer_id: c.id, conversation_id: null, title, product_name: product,
       source_channel: 'website', status, interest_summary: `Interested in ${product}`, estimated_value: value,
       assigned_user_id: null, marketing_user_id: null, sales_user_id: null, temperature: null, call_count: 0, last_call_at: null,
-      next_call_at: null, call_instruction: null, handed_over_at: null, created_actor_type: 'ai_agent', created_at: iso(hours), updated_at: iso(hours + 1), ...extra };
+      next_call_at: null, handed_over_at: null, created_actor_type: 'ai_agent', created_at: iso(hours), updated_at: iso(hours + 1), ...extra };
     l.assigned_user_id = l.sales_user_id ?? l.marketing_user_id;
     db.leads.push(l);
     ev(org, c.id, 'lead_created', `Lead created: ${title}`, hours, l.created_actor_type, { lead_id: l.id, actor_name: l.created_actor_type === 'ai_agent' ? 'AI agent' : 'Ajith Perera' });
@@ -209,7 +209,7 @@ export function buildSeed(): DB {
     priority: 'high', status: 'in_progress', customer_id: elena.id, assigned_user_id: 'u_ajith', due_at: iso(4), created_actor_type: 'ai_agent' });
 
   const avery = customer(NL, 'Avery Lim', { primary_email: 'avery@pinecrest.example', company_name: 'Pinecrest Capital', owner_user_id: 'u_jesse' }, 24 * 6);
-  const lAv = lead(NL, avery, 'Standard package for 12 staff', 'Standard', 'contacted', 216000, -24 * 6 + 1, { marketing_user_id: 'u_jesse', temperature: 'warm', next_call_at: iso(3), call_instruction: 'Send the Standard vs Premium proposal and ask when they decide.' });
+  const lAv = lead(NL, avery, 'Standard package for 12 staff', 'Standard', 'contacted', 216000, -24 * 6 + 1, { marketing_user_id: 'u_jesse', temperature: 'warm', next_call_at: iso(3) });
   call(lAv, 'u_jesse', -24 * 5, 'no_answer', null, 'No answer, left voicemail.');
   call(lAv, 'u_jesse', -24 * 2, 'answered', 'warm', 'Comparing with a competitor. Call back with proposal.');
   db.followups.push({ id: uid('fu'), organization_id: NL, customer_id: avery.id, lead_id: lAv.id, conversation_id: null, scheduled_at: iso(3),

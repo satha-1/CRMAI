@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import {
-  BarChart3, BookOpen, Filter, Home, Inbox, LogOut, MapPin, Menu, PhoneCall, Settings, UserPlus, Users, UsersRound, ExternalLink,
+  BarChart3, BookOpen, Filter, Home, Inbox, LogOut, MapPin, Menu, PhoneCall, Settings, ShieldAlert, UserPlus, Users, UsersRound, ExternalLink,
 } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { USE_MOCK } from '@/api/client';
@@ -24,10 +24,12 @@ const NAV: Record<Role, Item[]> = {
   marketing_manager: [
     overview,
     { to: '/assign', label: 'Assign leads', icon: UserPlus },
-    { to: '/assign-calls', label: 'Assign calls', icon: PhoneCall },
+    { to: '/calls', label: 'Team calls', icon: PhoneCall },
     { to: '/performance', label: 'Team performance', icon: BarChart3 },
     { to: '/inbox', label: 'Customer messages', icon: Inbox },
+    { to: '/escalations', label: 'Escalations', icon: ShieldAlert },
     customers,
+    { to: '/leads', label: 'Pipeline', icon: Filter },
     { to: '/knowledge', label: 'AI knowledge', icon: BookOpen },
   ],
   marketing_executive: [
@@ -41,6 +43,7 @@ const NAV: Record<Role, Item[]> = {
     { to: '/assign', label: 'Assign visits', icon: UserPlus },
     { to: '/visits', label: 'Team visits', icon: MapPin },
     { to: '/performance', label: 'Team performance', icon: BarChart3 },
+    { to: '/leads', label: 'Pipeline', icon: Filter },
     customers,
   ],
   sales_executive: [

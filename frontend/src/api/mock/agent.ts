@@ -81,7 +81,7 @@ export function runFakeAgent(db: DB, org: Organization, conv: Conversation, inbo
     if (!lead) {
       const l: Lead = { id: uid('lead'), organization_id: org.id, customer_id: customer.id, conversation_id: conv.id, title: product.doc.title, product_name: pname,
         source_channel: conv.channel, status: 'new', interest_summary: inbound.content.slice(0, 200), estimated_value: null, assigned_user_id: null,
-        marketing_user_id: null, sales_user_id: null, temperature: null, call_count: 0, last_call_at: null, next_call_at: null, call_instruction: null, handed_over_at: null,
+        marketing_user_id: null, sales_user_id: null, temperature: null, call_count: 0, last_call_at: null, next_call_at: null, handed_over_at: null,
         created_actor_type: 'ai_agent', created_at: now(), updated_at: now() };
       db.leads.push(l); lead = l; created = true;
       journey(org.id, customer.id, 'lead_created', `Lead created: ${l.title}`, 'ai_agent', { lead_id: l.id, conversation_id: conv.id });

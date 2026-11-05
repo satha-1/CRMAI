@@ -76,9 +76,9 @@ function build(role: Role, me: string, x: { n: (f: (l: Lead) => boolean) => numb
     case 'marketing_manager':
       return [
         { label: 'Waiting for a caller', value: n(unassignedNew), to: '/assign', icon: UserPlus, color: 'var(--red)', hint: 'Assign to an executive' },
-        { label: 'Hot', value: n(temp('hot')), to: '/assign-calls', icon: Flame, color: tempColor.hot, hint: 'Being called' },
-        { label: 'Warm', value: n(temp('warm')), to: '/assign-calls', icon: Sun, color: tempColor.warm, hint: 'Being called' },
-        { label: 'Cold', value: n(temp('cold')), to: '/assign-calls', icon: Snowflake, color: tempColor.cold, hint: 'Nurture later' },
+        { label: 'Hot', value: n(temp('hot')), to: '/calls', icon: Flame, color: tempColor.hot, hint: 'Being called' },
+        { label: 'Warm', value: n(temp('warm')), to: '/calls', icon: Sun, color: tempColor.warm, hint: 'Being called' },
+        { label: 'Cold', value: n(temp('cold')), to: '/calls', icon: Snowflake, color: tempColor.cold, hint: 'Nurture later' },
       ];
     case 'sales_manager':
       return [

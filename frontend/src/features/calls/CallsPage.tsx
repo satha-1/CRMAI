@@ -2,7 +2,7 @@
 // set a callback, or hand the lead to sales. Marketing managers see the whole team's queue.
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRightLeft, CalendarClock, Mail, MessageSquareText, Phone, PhoneCall, PhoneOff } from 'lucide-react';
+import { ArrowRightLeft, CalendarClock, Mail, Phone, PhoneCall, PhoneOff } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { isManager } from '@/auth/permissions';
 import { useCustomers, useLeadCalls, useLeadsFor, useLogCall, useUsers } from '@/api/queries';
@@ -50,7 +50,6 @@ export function CallsPage() {
           <div className="row small" style={{ gap: 8, marginTop: 2 }}>
             {l.next_call_at && <span style={{ color: overdue ? 'var(--red)' : 'var(--text-2)' }}><CalendarClock size={12} style={{ verticalAlign: -2 }} /> {dateTime(l.next_call_at)}</span>}
             <span className="muted">{l.call_count ? `${l.call_count} call${l.call_count > 1 ? 's' : ''}` : 'Never called'}</span>
-            {l.call_instruction && <span title={l.call_instruction} style={{ color: 'var(--primary)' }}><MessageSquareText size={12} style={{ verticalAlign: -2 }} /> note</span>}
             {manager && l.marketing_user_id && <span className="muted">· {users?.items.find((u) => u.id === l.marketing_user_id)?.full_name}</span>}
           </div>
         </div>
@@ -164,7 +163,6 @@ function CallPanel({ lead, customer }: { lead: Lead; customer?: Customer }) {
       ) : has('call.log') && (
         <form className="stack" onSubmit={submit} style={{ border: '1px solid var(--border)', borderRadius: 12, padding: 16 }}>
           <h3>Log this call</h3>
-          {lead.call_instruction && <div className="note-box"><MessageSquareText /><div><div className="muted small">From your manager</div>{lead.call_instruction}</div></div>}
           <Field label="How did the call go?">
             <div className="chips" role="radiogroup">
               {OUTCOMES.map((o) => (

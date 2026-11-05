@@ -30,9 +30,9 @@ export function PerformancePage() {
       if (r.reports_pending) attention.push({ who: r.full_name, text: `${r.reports_pending} visit report${r.reports_pending > 1 ? 's' : ''} not written after the visit time`, to: `/visits?tab=report&exec=${r.user_id}` });
       if (r.no_shows >= 2) attention.push({ who: r.full_name, text: `${r.no_shows} customers didn't come — confirm visits the day before`, to: `/visits?tab=done&exec=${r.user_id}` });
     } else {
-      if (r.stale) attention.push({ who: r.full_name, text: `${r.stale} lead${r.stale > 1 ? 's' : ''} assigned over 24 h ago and still not called`, to: `/assign-calls` });
-      if (r.overdue_callbacks) attention.push({ who: r.full_name, text: `${r.overdue_callbacks} callback${r.overdue_callbacks > 1 ? 's' : ''} overdue`, to: `/assign-calls` });
-      if (r.calls >= 5 && r.answered_rate < 0.35) attention.push({ who: r.full_name, text: `Only ${pct(r.answered_rate)} of calls answered — try different times`, to: `/assign-calls` });
+      if (r.stale) attention.push({ who: r.full_name, text: `${r.stale} lead${r.stale > 1 ? 's' : ''} assigned over 24 h ago and still not called`, to: `/calls` });
+      if (r.overdue_callbacks) attention.push({ who: r.full_name, text: `${r.overdue_callbacks} callback${r.overdue_callbacks > 1 ? 's' : ''} overdue`, to: `/calls` });
+      if (r.calls >= 5 && r.answered_rate < 0.35) attention.push({ who: r.full_name, text: `Only ${pct(r.answered_rate)} of calls answered — try different times`, to: `/calls` });
     }
   }
 

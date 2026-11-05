@@ -89,15 +89,15 @@ New lead (AI chat / website / staff)
 | Role | Menu | What they do |
 | --- | --- | --- |
 | **Admin** | Team & roles, Workspace settings | Only people: add staff, give the role, set which manager each executive reports to, deactivate. Cannot see leads, calls or visits. |
-| **Marketing manager** | Overview, Assign leads, Assign calls, Team performance, Customer messages, Customers, AI knowledge | Assigns new leads (with a call-by deadline) to their own executives, assigns calls on existing leads (executive + time + instruction), checks every call result and note, sees who is behind (not called in 24 h, overdue callbacks, low answer rate), reads and answers customer messages. |
+| **Marketing manager** | Overview, Assign leads, Team calls, Team performance, Customer messages, Escalations, Customers, Pipeline, AI knowledge | Assigns leads (with a call-by deadline) to their own executives, checks every call result and note, sees who is behind (not called in 24 h, overdue callbacks, low answer rate), reads and answers customer messages. |
 | **Marketing executive** | Overview, My calls, My leads, Customers | Calls assigned leads, sets hot / warm / cold, books callbacks, hands interested leads to sales. |
-| **Sales manager** | Overview, Assign visits, Team visits, Team performance, Customers | Assigns visits for interested leads (with a clash warning if the executive already has a visit within 90 min), sees every executive's day, late reports and reschedule requests, reschedules / reassigns / cancels, checks reports and win rates. |
+| **Sales manager** | Overview, Assign visits, Team visits, Team performance, Pipeline, Customers | Assigns visits for interested leads (with a clash warning if the executive already has a visit within 90 min), sees every executive's day, late reports and reschedule requests, reschedules / reassigns / cancels, checks reports and win rates. |
 | **Sales executive** | Overview, My visits, My deals, Customers | Today's agenda with time, customer phone (tap to call), address (opens Google Maps), marketing's call notes and the manager's note. Updates status, writes the visit report (outcome, interest level, what the customer said, next step, follow-up date), marks no-show or asks for a new time, closes negotiating deals. |
 
 Managers only see and assign executives who report to them (set by the admin). Permissions live in
 `src/auth/permissions.ts`; the mock API in `src/api/mock/server.ts` enforces the same rules, so it is the reference for the backend.
 
-API routes the backend needs for this: `POST /leads/assign` (`call_by`), `POST /leads/assign-calls`, `GET /team/workload`, `GET /team/performance`,
+API routes the backend needs for this: `POST /leads/assign` (`call_by`), `GET /team/workload`, `GET /team/performance`,
 `GET /calls`, `GET|POST /leads/:id/calls`, `GET /visits`, `POST /visits` (manager assigns), `PATCH /visits/:id` (reschedule / reassign),
 `POST /visits/:id/start`, `/checkin`, `/complete` (the report), `/reschedule-request`, `/cancel` (`no_show`), `GET /leads/:id/visits`.
 `User` has `manager_id`; `SiteVisit` has the status flow `scheduled → on_the_way → checked_in → completed | no_show | cancelled`
@@ -112,7 +112,6 @@ plus the report fields (see `src/api/types.ts`).
 | `/assign` | Marketing manager: assign leads + call-by time. Sales manager: assign site visits (exec, time, site) | — |
 | `/calls` | Marketing: call list (callbacks due, not called, hot / warm / cold), log a call, hand over | — |
 | `/visits` | Sales exec: today's agenda, status, visit report. Sales manager: team's day, late reports, reschedule | — |
-| `/assign-calls` | Marketing manager: pick leads, set executive, call time and instruction; shows on the executive's My calls | — |
 | `/performance` | Managers: per-executive numbers, needs-attention list, latest call notes / visit reports | 06 Reports |
 | `/inbox/:id?` | Inbox, thread, take over / release AI, escalate, AI decisions panel | — (docs §10) |
 | `/escalations` | Queue by priority + SLA, assign, take over, resolve with notes | — (docs §15) |

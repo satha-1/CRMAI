@@ -127,8 +127,6 @@ export const useLeadsFor = (params: { status?: string; temperature?: string; una
   useQuery({ queryKey: useKey('leads', 'filtered', params), queryFn: () => api.get<Page<Lead>>(`/leads${qs(params)}`) });
 export const useAssignLeads = () =>
   useAction((b: { team: Team; user_id: string; lead_ids: string[]; call_by?: string | null }) => api.post<{ assigned: number }>('/leads/assign', b), ['leads', 'workload', 'notifications', 'timeline']);
-export const useAssignCalls = () =>
-  useAction((b: { lead_ids: string[]; user_id: string; call_at: string; instruction?: string }) => api.post<{ assigned: number }>('/leads/assign-calls', b), ['leads', 'workload', 'performance', 'notifications']);
 export const useWorkload = (team: Team, enabled = true) =>
   useQuery({ queryKey: useKey('workload', team), queryFn: () => api.get<Page<TeamMemberLoad>>(`/team/workload${qs({ team })}`), enabled });
 
