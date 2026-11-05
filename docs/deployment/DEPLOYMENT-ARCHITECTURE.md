@@ -55,7 +55,7 @@ Do not run two API replicas. The scanner would send duplicate notifications.
 | Name | Purpose |
 | --- | --- |
 | `DATABASE_URL` | SQLAlchemy URL |
-| `JWT_SECRET` | HMAC secret, 32 bytes or more |
+| `JWT_PRIVATE_KEY_PATH`, `JWT_PUBLIC_KEY_PATH` | RSA key files for access tokens. Only `auth-service` gets the private key |
 | `WIDGET_KEY` | Public widget header |
 | `LLM_BASE_URL` | OpenAI-compatible base URL |
 | `LLM_API_KEY` | Provider secret |

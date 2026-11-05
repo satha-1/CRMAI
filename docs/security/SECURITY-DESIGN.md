@@ -7,18 +7,20 @@
 
 Staff authenticate with email and password against `users`. The AI has no password and no login route.
 
-- Access token: JWT, HMAC-SHA256, lifetime 15 minutes, claims `sub`, `role`, `exp`, `iat`, `type=access`.
+- Access token: JWT, RS256, lifetime 15 minutes, claims `iss`, `sub`, `role`, `exp`, `iat`, `type=access`. Only `auth-service` holds the private key. Kong and other services verify with the public key ([ADR-011](../adr/ADR-011-microservices-kong-gateway.md)).
 - Refresh token: 32 random bytes, URL-safe, lifetime 7 days, stored as SHA-256 in `refresh_tokens`.
 - Rotation: every refresh revokes the presented token and issues a new one in the same `family_id`. Presenting a revoked token revokes every token in that family.
-- Logout revokes the presented refresh token.
+- Logout revokes every token in the presented token's family, which ends that session only.
 
 Web stores the refresh token in `sessionStorage`. Mobile uses SecureStore. Both are prototype choices so one token API serves both clients. A stolen sessionStorage token is usable until expiry or logout. Mitigations: short access lifetime, rotation, and no long-lived token in `localStorage`.
 
-Passwords: bcrypt, cost factor 12. Minimum 10 characters on create. The login endpoint does not enforce a complexity policy beyond length on the stored password. It always returns `AUTH_INVALID` for unknown users and bad passwords.
+Passwords: bcrypt, cost factor 12, over a SHA-256 of the password because bcrypt rejects input over 72 bytes. Minimum 10 characters on create. The login endpoint does not enforce a complexity policy beyond length on the stored password. It always returns `AUTH_INVALID` for unknown users and bad passwords.
 
 ## 2. Authorization and RBAC
 
 Permissions are rows in `role_permissions`. Each request loads them. JWTs are not edited when a role changes.
+
+**Roles have changed.** The code now uses five roles: `admin`, `marketing_manager`, `marketing_executive`, `sales_manager`, `sales_executive`. The current matrix is in `services/auth-service/app/db/migrations/versions/0001_auth_tables.py`, which matches `frontend/src/auth/permissions.ts`. The table below is the earlier three-role design.
 
 | Permission | admin | supervisor | agent |
 | --- | --- | --- | --- |
@@ -53,9 +55,11 @@ Scope checks that are tighter than the permission (conversation ownership, notif
 
 The access token is sent as `Authorization: Bearer`. It is not placed in a query string except the WebSocket handshake. Logs redact query parameter `token`.
 
-Clock skew allowance is 30 seconds. Algorithms other than HS256 are rejected.
+Clock skew allowance is 30 seconds. Algorithms other than RS256 are rejected.
 
-`JWT_SECRET` is at least 32 random bytes, different in each environment.
+Kong checks the signature and issuer. Each service must also verify the token itself, including expiry, because Kong leaves expiry to the service so that clients get `AUTH_EXPIRED`.
+
+The RSA key pair is 2048 bits, different in each environment, and never committed. `scripts/setup-dev.sh` creates a local pair in `secrets/`.
 
 ## 5. Password security
 
@@ -86,7 +90,7 @@ HMAC-SHA256 over the raw body, constant-time compare. Missing secret in producti
 
 Environment variables or a local `.env` that is gitignored. `.env.example` lists keys with empty values. Production secrets live in the host environment, not in the image.
 
-Never put `LLM_API_KEY`, `JWT_SECRET`, SMTP passwords, or channel tokens in the frontend bundle or the system prompt.
+Never put `LLM_API_KEY`, the JWT private key, SMTP passwords, or channel tokens in the frontend bundle or the system prompt.
 
 ## 11. AI tool authorization
 
