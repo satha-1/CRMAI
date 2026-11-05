@@ -73,7 +73,7 @@ export function Layout() {
   return (
     <div className="shell">
       <aside className={`sidebar ${open ? 'open' : ''}`} aria-label="Main navigation">
-        <div className="brand"><img src="/logo.svg" alt="" />CRMAI</div>
+        <div className="brand"><img src="/crmai-logo.png" alt="CRM-AI" /></div>
         <nav className="nav">
           {(role ? NAV[role] : []).map(link)}
         </nav>
