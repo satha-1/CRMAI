@@ -1,0 +1,26 @@
+.w-page { min-height: 100%; display: grid; place-items: center; padding: 16px; background: linear-gradient(160deg, #eef2ff, #f4f6fb 60%); }
+.w-box { width: min(420px, 100%); height: min(680px, calc(100vh - 32px)); background: #fff; border-radius: 18px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--border); }
+.w-head { background: linear-gradient(120deg, #1d5bff, #7c4dff); color: #fff; padding: 16px; display: flex; gap: 12px; align-items: center; }
+.w-logo { width: 38px; height: 38px; border-radius: 50%; background: rgba(255, 255, 255, .2); display: grid; place-items: center; }
+.w-link { background: rgba(255, 255, 255, .18); border: 0; color: #fff; border-radius: 8px; padding: 5px 10px; font-size: 12.5px; cursor: pointer; }
+.w-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 10px; background: var(--surface-2); }
+.w-msg { display: flex; flex-direction: column; max-width: 82%; gap: 3px; }
+.w-msg.in { align-self: flex-end; align-items: flex-end; }
+.w-msg.out { align-self: flex-start; }
+.w-who { font-size: 11px; color: var(--muted); display: inline-flex; gap: 4px; align-items: center; }
+.w-time { font-size: 10.5px; color: var(--muted); }
+.w-bubble { padding: 9px 13px; border-radius: 14px; white-space: pre-wrap; word-wrap: break-word; }
+.w-bubble.me { background: var(--primary); color: #fff; border-bottom-right-radius: 4px; }
+.w-bubble.ai { background: #fff; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+.w-bubble.staff { background: var(--teal-50); border: 1px solid #b6eadc; border-bottom-left-radius: 4px; }
+.w-system { align-self: center; text-align: center; font-size: 12.5px; background: var(--amber-50); color: #7a4a05; padding: 8px 12px; border-radius: 10px; max-width: 92%; }
+.w-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--border); }
+.w-foot { text-align: center; font-size: 11px; color: var(--muted); padding: 0 0 8px; }
+.w-suggest { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.w-suggest button { text-align: left; background: #fff; border: 1px solid var(--border-strong); border-radius: 10px; padding: 8px 10px; cursor: pointer; font-size: 13px; color: var(--primary); }
+.w-suggest button:hover { border-color: var(--primary); }
+.w-typing { display: inline-flex; gap: 4px; padding: 12px 14px; }
+.w-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
+.w-typing span:nth-child(2) { animation-delay: .2s; }
+.w-typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
