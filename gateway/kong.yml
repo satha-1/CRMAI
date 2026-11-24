@@ -32,6 +32,13 @@ services:
           - ~/api/v1/auth/(login|refresh|signup|health)$
         regex_priority: 1
         strip_path: false
+        plugins:
+          # Anyone can reach these routes, and each password check is slow on purpose.
+          - name: rate-limiting
+            config:
+              minute: 30
+              limit_by: ip
+              policy: local
       - name: auth-protected-routes
         # Regex, because a plain prefix would also match lookalikes such as /api/v1/authx.
         paths:

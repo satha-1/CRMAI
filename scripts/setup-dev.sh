@@ -10,6 +10,9 @@ if [ ! -f secrets/jwt_private.pem ]; then
   openssl pkey -in secrets/jwt_private.pem -pubout -out secrets/jwt_public.pem
   echo "Created JWT keys in secrets/"
 fi
+# auth-service runs as "nobody" and must read the key. The folder keeps other server users out.
+chmod 700 secrets
+chmod 644 secrets/jwt_private.pem secrets/jwt_public.pem
 
 if [ ! -f .env ]; then
   echo "POSTGRES_PASSWORD=$(openssl rand -hex 24)" > .env
