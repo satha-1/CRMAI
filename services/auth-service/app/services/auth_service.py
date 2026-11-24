@@ -2,6 +2,7 @@ import secrets
 import uuid
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -16,9 +17,9 @@ from app.core.security import (
     new_refresh_token,
     verify_password,
 )
-from app.models import Membership, Organization, RefreshToken, User
+from app.models import Membership, Organization, RefreshToken, Role, User
 from app.repositories import token_repository, user_repository
-from app.schemas.auth import MembershipOut, MeOut, OrganizationOut, SignupIn, SignupOut, TokenOut, UserSummary
+from app.schemas.auth import AccountIn, AccountOut, MembershipOut, MeOut, OrganizationOut, SignupIn, SignupOut, TokenOut, UserSummary
 
 
 def _issue_tokens(db: Session, user: User, family_id: uuid.UUID | None = None) -> TokenOut:
@@ -45,7 +46,7 @@ def login(db: Session, email: str, password: str) -> TokenOut:
         raise AppError(429, "RATE_LIMITED", "Too many failed attempts. Try again later")
     user = user_repository.get_by_email(db, email)
     password_ok = verify_password(password, user.password_hash if user else DUMMY_PASSWORD_HASH)
-    if not user or not password_ok or not user.is_active:
+    if not user or not password_ok or not user.can_sign_in:
         login_throttle.record_failure(email)
         raise AppError(401, "AUTH_INVALID", "Email or password is incorrect")
     login_throttle.clear(email)
@@ -69,7 +70,7 @@ def refresh(db: Session, refresh_token: str) -> TokenOut:
         raise AppError(401, "AUTH_EXPIRED", "Session expired, please sign in again")
 
     user = user_repository.get_by_id(db, row.user_id)
-    if not user.is_active:
+    if not user.can_sign_in:
         token_repository.revoke_family(db, row.family_id, now)
         db.commit()
         raise AppError(401, "AUTH_REVOKED", "Session expired, please sign in again")
@@ -113,6 +114,27 @@ def signup(db: Session, body: SignupIn) -> SignupOut:
     return SignupOut(**tokens.model_dump(), organization_id=organization.id)
 
 
+def find_or_create_account(db: Session, body: AccountIn) -> AccountOut:
+    """For other services: password hashing stays here, in the one service that handles logins."""
+    existing = user_repository.get_by_email(db, body.email)
+    if existing:
+        return AccountOut(id=existing.id, created=False)
+    if not body.password or len(body.password) < 10:
+        raise AppError(400, "VALIDATION_ERROR", "Password must be at least 10 characters")
+    role = db.scalar(select(Role).where(Role.name == body.role))
+    if role is None:
+        raise AppError(400, "VALIDATION_ERROR", "Unknown role")
+    user = User(email=body.email, password_hash=hash_password(body.password), full_name=body.full_name, role=role)
+    db.add(user)
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        # Two requests can race on the same email. The first one's account is the account.
+        return AccountOut(id=user_repository.get_by_email(db, body.email).id, created=False)
+    return AccountOut(id=user.id, created=True)
+
+
 def me(user: User) -> MeOut:
     # The frontend picks the workspace from memberships, so X-Organization-Id does not apply here.
     return MeOut(
@@ -124,5 +146,6 @@ def me(user: User) -> MeOut:
         memberships=[
             MembershipOut(organization=OrganizationOut.model_validate(m.organization), role=m.role.name)
             for m in user.memberships
+            if m.is_active
         ],
     )

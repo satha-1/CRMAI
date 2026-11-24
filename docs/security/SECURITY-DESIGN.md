@@ -43,6 +43,8 @@ Permissions are rows in `role_permissions`. Each request loads them. JWTs are no
 
 Scope checks that are tighter than the permission (conversation ownership, notification ownership) live in the service. A 403 is for a missing permission. A 404 is for a record outside scope.
 
+**Staff changes stay inside one company.** Every `business-service` route checks the caller's membership in the company named by `X-Organization-Id`. Deactivating someone applies to that company only, and they can no longer sign in once they have no active company. An admin cannot change a person's password or name, because those belong to the account across all their companies.
+
 ## 3. API security
 
 - HTTPS in any hosted environment. Local Docker may use HTTP.

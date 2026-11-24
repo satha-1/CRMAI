@@ -3,7 +3,8 @@
 Kong is the single entry point for the API. Clients call Kong, and Kong forwards each request to the right service using the path.
 
 ```text
-Browser / mobile --> Kong (localhost:8080) --> auth-service --> PostgreSQL
+Browser / mobile --> Kong (localhost:8080) --> business-service  (/api/v1/users, /api/v1/organizations)
+                                           --> auth-service --> PostgreSQL
                                                (only reachable inside Docker)
 ```
 
@@ -15,7 +16,8 @@ Kong runs in DB-less mode. All routes live in [`gateway/kong.yml`](../../gateway
 | `gateway/kong.yml` | Services, routes, and plugins |
 | `gateway/start.sh` | Inserts the public key into the Kong config at startup |
 | `scripts/setup-dev.sh` | Creates your local JWT keys and database password |
-| `services/auth-service/` | Login, tokens, and the current user |
+| `services/auth-service/` | Accounts, login, and tokens |
+| `services/business-service/` | Staff, roles, and workspace settings |
 
 ## Run it
 
@@ -76,6 +78,10 @@ The tests use a separate `crmai_test` database, which they drop and recreate on 
 
 ```bash
 docker compose run --rm --build auth-service-test
+```
+
+```bash
+docker compose run --rm --build business-service-test
 ```
 
 ## Connect the frontend

@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "crmai-business-service"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "email-validator==2.3.0",
+    "fastapi==0.162.0",
+    "psycopg[binary]==3.3.8",
+    "pydantic-settings==2.16.2",
+    "pyjwt[crypto]==2.15.1",
+    "sqlalchemy==2.1.8",
+    "uvicorn==0.54.0",
+]
+
+[project.optional-dependencies]
+# alembic runs auth-service's migrations to build the test database.
+test = ["alembic==1.20.1", "httpx==0.28.1", "pytest==9.2.0"]
+
+# The image runs the app from /app, so pip only installs the dependencies.
+[tool.setuptools]
+packages = []

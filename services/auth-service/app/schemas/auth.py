@@ -7,7 +7,18 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, EmailStr, Field, Str
 Email = Annotated[EmailStr, AfterValidator(str.lower)]
 Name = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=120)]
 
-CHANNEL_CODES = ("website", "email", "whatsapp", "facebook", "instagram", "voice")
+
+class AccountIn(BaseModel):
+    email: Email
+    full_name: Name
+    # Only needed for a new account. An existing account keeps its own password.
+    password: str | None = Field(default=None, max_length=128)
+    role: str
+
+
+class AccountOut(BaseModel):
+    id: uuid.UUID
+    created: bool
 
 
 class LoginIn(BaseModel):
@@ -60,8 +71,7 @@ class OrganizationOut(BaseModel):
     timezone: str
     product_label: str
     created_at: datetime
-    # shortcut: fixed list because no service manages channels yet, read organization_channels (ADR-010) once one does.
-    channels: list[ChannelOut] = [ChannelOut(code=c, is_enabled=c == "website") for c in CHANNEL_CODES]
+    channels: list[ChannelOut]
 
 
 class MembershipOut(BaseModel):

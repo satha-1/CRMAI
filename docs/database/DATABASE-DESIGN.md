@@ -92,7 +92,7 @@ The diagram shows identity relationships. Columns below are the full logical mod
 
 **Purpose.** The staff roles.
 
-**Implemented differently.** `auth-service` seeds the frontend's five roles and their permissions, and adds `organizations` and `memberships` from [ADR-010](../adr/ADR-010-multi-tenancy.md). See `services/auth-service/app/db/migrations/versions/0001_auth_tables.py`. The role and permission values listed below are the earlier design.
+**Implemented differently.** `auth-service` seeds the frontend's five roles and their permissions, and adds `organizations` and `memberships` from [ADR-010](../adr/ADR-010-multi-tenancy.md). `memberships` also holds `is_active` and `manager_id`, because a person's status and reporting line belong to each company, and `organization_channels` stores channel settings. See `services/auth-service/app/db/migrations/versions/`. The role and permission values listed below are the earlier design.
 
 | Field | Type | Constraints |
 | --- | --- | --- |

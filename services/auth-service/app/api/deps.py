@@ -28,6 +28,6 @@ def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
     except ValueError:
         raise AppError(401, "AUTH_INVALID", "Please sign in") from None
     user = user_repository.get_by_id(db, user_id)
-    if user is None or not user.is_active:
+    if user is None or not user.can_sign_in:
         raise AppError(401, "AUTH_INVALID", "Please sign in")
     return user

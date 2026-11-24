@@ -45,4 +45,8 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
 
     role: Mapped[Role] = relationship()
-    memberships: Mapped[list["Membership"]] = relationship(back_populates="user")  # noqa: F821
+    memberships: Mapped[list["Membership"]] = relationship(back_populates="user", foreign_keys="Membership.user_id")  # noqa: F821
+
+    @property
+    def can_sign_in(self) -> bool:
+        return self.is_active and any(m.is_active for m in self.memberships)
